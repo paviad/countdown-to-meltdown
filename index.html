@@ -18,56 +18,53 @@
             position: relative;
         }
 
-        /* Fire Glow Layer */
-        .fire-glow {
+        #bg-image {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 140vw;
-            height: 140vh;
-            background: radial-gradient(circle, 
-                rgba(255, 80, 0, 0.3) 0%, 
-                rgba(255, 40, 0, 0.15) 30%, 
-                rgba(20, 10, 0, 0.05) 60%, 
-                transparent 80%);
-            z-index: -3;
-            animation: flicker 5s infinite alternate;
-        }
-
-        /* Smoke/Cloud Layers */
-        .smoke-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
             top: 0;
             left: 0;
-            z-index: -2;
-            filter: blur(40px);
-            opacity: 0.5;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -5;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            filter: brightness(0.6) contrast(1.1);
         }
 
-        .smoke-puff {
+        .bg-overlay {
             position: absolute;
-            background: #1a1a1a;
-            border-radius: 50%;
-            animation: billow var(--duration) infinite ease-in-out alternate;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.8) 100%);
+            z-index: -4;
         }
 
-        /* Shockwave Rings */
-        .shockwave {
+        /* Loading indicator for the AI image */
+        #loader {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 4px solid rgba(255, 140, 0, 0.15);
-            border-radius: 50%;
-            z-index: -1;
-            animation: shockwave-expand 8s linear infinite;
+            z-index: -3;
+            text-align: center;
         }
 
-        .shockwave:nth-child(2) { animation-delay: 2.5s; }
-        .shockwave:nth-child(3) { animation-delay: 5s; }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 100, 0, 0.3);
+            border-top: 3px solid #ff6400;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Embers/Particles */
         .ember {
@@ -79,33 +76,17 @@
             animation: rise var(--duration) linear infinite;
         }
 
-        @keyframes flicker {
-            0% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
-            100% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.98); }
-        }
-
-        @keyframes billow {
-            0% { transform: scale(1) translate(0, 0); background: #111; }
-            100% { transform: scale(1.5) translate(20px, -30px); background: #222; }
-        }
-
-        @keyframes shockwave-expand {
-            0% { width: 0; height: 0; opacity: 1; border-width: 20px; filter: brightness(2); }
-            100% { width: 250vw; height: 250vw; opacity: 0; border-width: 1px; filter: brightness(1); }
-        }
-
         @keyframes rise {
             0% { transform: translateY(110vh) translateX(0) scale(1); opacity: 0; }
-            10% { opacity: 1; }
+            10% { opacity: 0.8; }
             100% { transform: translateY(-20vh) translateX(var(--drift)) scale(0.2); opacity: 0; }
         }
 
         .glass {
-            background: rgba(10, 5, 0, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 120, 0, 0.25);
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255, 100, 0, 0.05);
+            background: rgba(10, 5, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 120, 0, 0.3);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(255, 100, 0, 0.1);
         }
 
         .mono {
@@ -133,14 +114,15 @@
     </style>
 </head>
 <body class="flex items-center justify-center p-4">
-    <!-- Fire and Smoke Layers -->
-    <div class="fire-glow"></div>
-    <div class="smoke-container" id="smoke-container"></div>
+    <!-- AI Background -->
+    <img id="bg-image" alt="Background Explosion">
+    <div class="bg-overlay"></div>
     
-    <div class="shockwave"></div>
-    <div class="shockwave"></div>
-    <div class="shockwave"></div>
-    
+    <div id="loader">
+        <div class="spinner"></div>
+        <p class="text-orange-500 font-bold tracking-widest text-sm uppercase">Igniting Explosion...</p>
+    </div>
+
     <div id="ember-container"></div>
 
     <main class="w-full max-w-4xl relative z-10">
@@ -150,10 +132,9 @@
             </h1>
             <h2 class="text-xl md:text-2xl font-light tracking-[0.4em] uppercase text-orange-200/50 mb-2">Countdown To</h2>
             <h3 class="text-7xl md:text-9xl font-black gradient-text tracking-tighter glow uppercase">8:00 PM ET</h3>
-            <p id="ny-time-display" class="mt-8 text-orange-400 font-bold tracking-widest opacity-90 text-sm md:text-base"></p>
+            <p id="ny-time-display" class="mt-8 text-orange-400 font-bold tracking-widest opacity-90 text-sm md:text-base drop-shadow-md"></p>
         </div>
 
-        <!-- Updated Grid: 3 Columns for Hours, Minutes, Seconds -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
             <div class="glass rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-500">
                 <span id="hours" class="text-6xl md:text-8xl font-extrabold mono glow">00</span>
@@ -175,18 +156,37 @@
     </main>
 
     <script>
-        // Generate Smoke Puffs
-        const smokeContainer = document.getElementById('smoke-container');
-        for (let i = 0; i < 15; i++) {
-            const puff = document.createElement('div');
-            puff.className = 'smoke-puff';
-            const size = Math.random() * 300 + 200;
-            puff.style.width = `${size}px`;
-            puff.style.height = `${size}px`;
-            puff.style.left = `${Math.random() * 100 - 20}%`;
-            puff.style.top = `${Math.random() * 100 - 20}%`;
-            puff.style.setProperty('--duration', `${Math.random() * 10 + 10}s`);
-            smokeContainer.appendChild(puff);
+        const apiKey = ""; // API key provided at runtime
+
+        async function generateBackground() {
+            const prompt = "A cinematic, highly detailed, dramatic massive explosion with thick black billowing smoke and intense bright orange fire, involving a futuristic power plant and a massive bridge collapsing in the background, night time, embers and sparks in the air, 4k resolution, epic scale.";
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        instances: [{ prompt: prompt }],
+                        parameters: { sampleCount: 1 }
+                    })
+                });
+
+                if (!response.ok) throw new Error('Generation failed');
+                
+                const result = await response.json();
+                const base64Data = result.predictions[0].bytesBase64Encoded;
+                const imgElement = document.getElementById('bg-image');
+                imgElement.src = `data:image/png;base64,${base64Data}`;
+                
+                imgElement.onload = () => {
+                    imgElement.style.opacity = "1";
+                    document.getElementById('loader').style.display = "none";
+                };
+            } catch (error) {
+                console.error("Failed to generate background:", error);
+                // Fallback to a dark gradient if API fails
+                document.getElementById('loader').innerHTML = '<p class="text-orange-500">Blast Imagery Offline</p>';
+            }
         }
 
         // Create Embers
@@ -208,32 +208,23 @@
         const targetMinute = 0;
         const targetSecond = 0;
 
-        /**
-         * Get the current time adjusted to New York (Eastern Time)
-         * reliably regardless of system timezone.
-         */
         function getNYTime() {
             const now = new Date();
-            // Get string representation of current time in NY
             const nyString = now.toLocaleString("en-US", {timeZone: "America/New_York"});
             return new Date(nyString);
         }
 
         function updateCountdown() {
             const nowNY = getNYTime();
-            
-            // Set target to 8 PM NY today
             let targetNY = new Date(nowNY);
             targetNY.setHours(targetHour, targetMinute, targetSecond, 0);
 
-            // If 8 PM today has passed, set target to 8 PM tomorrow
             if (nowNY >= targetNY) {
                 targetNY.setDate(targetNY.getDate() + 1);
             }
 
             const diffMs = targetNY.getTime() - nowNY.getTime();
 
-            // Display "Blast Commenced" message in the final second
             if (diffMs <= 1000) {
                 document.getElementById('event-message').classList.remove('hidden');
             } else {
@@ -248,7 +239,6 @@
             document.getElementById('minutes').textContent = String(minutes).padStart(2, '0');
             document.getElementById('seconds').textContent = String(seconds).padStart(2, '0');
 
-            // Correctly display the current New York time for user reference
             const timeString = nowNY.toLocaleTimeString('en-US', { 
                 hour: '2-digit', 
                 minute: '2-digit', 
@@ -260,7 +250,10 @@
             requestAnimationFrame(updateCountdown);
         }
 
-        updateCountdown();
+        window.onload = () => {
+            generateBackground();
+            updateCountdown();
+        };
     </script>
 </body>
 </html>
